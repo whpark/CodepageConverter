@@ -9,6 +9,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd;cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="codepage">
+      <UniqueIdentifier>{a8c641f9-7fb7-4bfb-991a-726da048d9e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -58,6 +61,12 @@
     </ClCompile>
     <ClCompile Include="MainWnd.cpp">
       <Filter>Framework - wxWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="string_convert_codepage_utf16_to_kssm.ixx">
+      <Filter>codepage</Filter>
+    </ClCompile>
+    <ClCompile Include="Codepage.ixx">
+      <Filter>codepage</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

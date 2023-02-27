@@ -23,6 +23,11 @@ public:
 	xMainWnd(wxWindow* parent);
 //// end generated class members
 
+public:
+	virtual void OnButtonClick_Check( wxCommandEvent& event ) override;
+	virtual void OnButtonClick_Convert( wxCommandEvent& event ) override;
+
+	virtual void OnButtonClick_Browse( wxCommandEvent& event ) override;
 };
 
 #endif // __MainWnd__
