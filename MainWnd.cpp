@@ -29,7 +29,8 @@ void xMainWnd::OnButtonClick_Check(wxCommandEvent& event) {
 	auto strFolder = m_dir->GetPath();
 	stdfs::path path = (LPCWSTR)strFolder;
 	std::error_code ec;
-	m_list->Clear();
+	m_lst->DeleteAllItems();
+	//m_list->Clear();
 	std::vector<int> lines;
 	wxArrayString strs;
 	if (ec.clear(); stdfs::is_regular_file(path, ec)) {
@@ -66,15 +67,17 @@ void xMainWnd::OnButtonClick_Check(wxCommandEvent& event) {
 			strs.Add(str);
 		}
 	}
-	if (!strs.empty())
-		m_list->InsertItems(strs, m_list->GetCount());
+	//if (!strs.empty())
+	//	m_list->InsertItems(strs, m_list->GetCount());
 }
 
 void xMainWnd::OnButtonClick_Convert(wxCommandEvent& event) {
 }
 
 void xMainWnd::OnButtonClick_Browse(wxCommandEvent& event) {
-	auto strFolder = m_browser->GetPath();
+	auto const strFolder = m_browser->GetPath();
+	if (strFolder.empty())
+		return;
 	m_dir->ExpandPath(strFolder);
 	m_dir->SelectPath(strFolder);
 	auto& app = wxGetApp();

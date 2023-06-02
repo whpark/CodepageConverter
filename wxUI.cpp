@@ -1,5 +1,5 @@
 ﻿///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version 3.10.1-0-g8feb16b3)
+// C++ code generated with wxFormBuilder (version 3.10.1-284-gf026a8e1)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO *NOT* EDIT THIS FILE!
@@ -184,11 +184,12 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 	bSizerFolder->Add( bSizer12, 0, wxEXPAND, 5 );
 
 	m_lst = new wxTreeListCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTL_3STATE|wxTL_CHECKBOX|wxTL_MULTIPLE );
+	m_lst->AppendColumn( _("filename"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_LEFT, wxCOL_RESIZABLE );
+	m_lst->AppendColumn( _("encoding"), 100, wxALIGN_CENTER, wxCOL_RESIZABLE );
+	m_lst->AppendColumn( _("size"), 80, wxALIGN_RIGHT, wxCOL_RESIZABLE );
+	m_lst->AppendColumn( wxEmptyString, wxCOL_WIDTH_DEFAULT, wxALIGN_LEFT, wxCOL_RESIZABLE );
 
-	bSizerFolder->Add( m_lst, 0, wxEXPAND | wxALL, 5 );
-
-	m_list = new wxListBox( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, NULL, 0 );
-	bSizerFolder->Add( m_list, 1, wxALL|wxEXPAND, 5 );
+	bSizerFolder->Add( m_lst, 1, wxALL|wxEXPAND, 5 );
 
 
 	bSizerTOP->Add( bSizerFolder, 1, wxEXPAND, 5 );

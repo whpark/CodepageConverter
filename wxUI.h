@@ -1,5 +1,5 @@
 ﻿///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version 3.10.1-0-g8feb16b3)
+// C++ code generated with wxFormBuilder (version 3.10.1-284-gf026a8e1)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO *NOT* EDIT THIS FILE!
@@ -28,7 +28,6 @@
 #include <wx/filepicker.h>
 #include <wx/dirctrl.h>
 #include <wx/treelist.h>
-#include <wx/listbox.h>
 #include <wx/frame.h>
 
 ///////////////////////////////////////////////////////////////////////////
@@ -63,7 +62,6 @@ namespace ui
 			wxButton* m_btnBrowse;
 			wxGenericDirCtrl* m_dir;
 			wxTreeListCtrl* m_lst;
-			wxListBox* m_list;
 
 			// Virtual event handlers, override them in your derived class
 			virtual void OnButtonClick_Check( wxCommandEvent& event ) = 0;
@@ -73,7 +71,7 @@ namespace ui
 
 		public:
 
-			IMainWnd( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Desktop"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 980,522 ), long style = wxDEFAULT_FRAME_STYLE|wxMAXIMIZE_BOX|wxMINIMIZE_BOX|wxTAB_TRAVERSAL );
+			IMainWnd( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Desktop"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 979,544 ), long style = wxDEFAULT_FRAME_STYLE|wxMAXIMIZE_BOX|wxMINIMIZE_BOX|wxTAB_TRAVERSAL );
 
 			~IMainWnd();
 
