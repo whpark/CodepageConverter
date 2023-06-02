@@ -361,13 +361,3 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/src/BiscuitView/wxUI.h
-/src/BiscuitView/wxUI.cpp
-/src/BiscuitView/wxMatView.h
-/src/BiscuitView/wxMatView.cpp
-/src/BiscuitView/wxWebBrowser.h
-/src/BiscuitView/wxWebBrowser.cpp
-/src/BiscuitView/wxWebBrowser.h
-/src/BiscuitView/wxWebBrowser.cpp
-/src/BiscuitView/wxMatView.h
-/src/BiscuitView/wxMatView.cpp
