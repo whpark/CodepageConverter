@@ -217,6 +217,7 @@
     <Image Include="wxDesktopApp.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="wxUI.fbp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

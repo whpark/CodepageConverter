@@ -8,7 +8,40 @@
 
 namespace gtl {
 
-	eFILE_TYPE CheckCodepage(std::filesystem::path const& path, std::vector<int>& lines) {
+	eFILE_TYPE ReadFileBOM(std::filesystem::path const& path) {
+		constexpr static std::array<std::pair<std::string_view, eFILE_TYPE>, 5> const codepages{{
+			{gtl::GetCodepageBOM(gtl::eCODEPAGE::UTF8), eFILE_TYPE::utf8},
+			{gtl::GetCodepageBOM(gtl::eCODEPAGE::UTF32LE), eFILE_TYPE::utf32le},	// UTF32LE must precede UTF16LE
+			{gtl::GetCodepageBOM(gtl::eCODEPAGE::UTF16LE), eFILE_TYPE::utf16le},
+			{gtl::GetCodepageBOM(gtl::eCODEPAGE::UTF16BE), eFILE_TYPE::utf16be},
+			{gtl::GetCodepageBOM(gtl::eCODEPAGE::UTF32BE), eFILE_TYPE::utf32be},
+			}};
+
+		eFILE_TYPE type = eFILE_TYPE::unknown;
+
+		std::ifstream f(path, std::ios_base::binary);
+		if (!f.seekg(0, std::ios_base::end))
+			return type;
+
+		auto file_len = f.tellg();
+		if (file_len <= 0)
+			return type;
+		auto len = std::min<size_t>(16, file_len);
+		std::vector<char> buffer(len, 0);
+		f.seekg(0, std::ios_base::beg);
+		f.read(buffer.data(), buffer.size());
+
+		for (auto const& [sv, codepage] : codepages) {
+			if (buffer.size() >= sv.size() and std::memcmp(buffer.data(), sv.data(), sv.size()) == 0) {
+				type = codepage;
+				break;
+			}
+		}
+		return type;
+	}
+
+#if 0
+	eFILE_TYPE GetFileBOM(std::filesystem::path const& path, std::vector<int>& lines) {
 		constexpr static std::array<std::pair<std::string_view, eFILE_TYPE>, 5> const codepages{{
 			{gtl::GetCodepageBOM(gtl::eCODEPAGE::UTF8), eFILE_TYPE::utf8},
 			{gtl::GetCodepageBOM(gtl::eCODEPAGE::UTF32LE), eFILE_TYPE::utf32le},	// UTF32LE must precede UTF16LE
@@ -71,9 +104,55 @@ namespace gtl {
 
 		return lines.empty() ? type : eFILE_TYPE::unknown;
 	}
+#endif
+
+	std::string DetectCodepage(std::string_view text) {
+		// Detect the codepage of the text using the 'ICU' library
+		std::string codepage;
+		UErrorCode errorCode = U_ZERO_ERROR;
+		UCharsetDetector* detector = ucsdet_open(&errorCode);
+		ucsdet_setText(detector, text.data(), text.size(), &errorCode);
+
+		const UCharsetMatch* match = ucsdet_detect(detector, &errorCode);
+		const char* charset = ucsdet_getName(match, &errorCode);
+
+		codepage = charset;
+
+		ucsdet_close(detector);
+
+		return codepage;
+	}
+
+	std::string DetectCodepage(std::filesystem::path const& path) {
+		// Detect the codepage of the text using the 'ICU' library
+		std::string codepage;
+		auto buffer = gtl::FileToContainer(path);
+		if (!buffer)
+			return codepage;
+		auto const& text = *buffer;
+		return DetectCodepage(std::string_view{text.begin(), text.end()});
+	}
 
 	bool CheckCodepageFolder(std::filesystem::path const& folder) {
 		return true;
+	}
+
+	int GetCharSizeFromCodepage(std::string codepage) {
+		for (auto& c : codepage)
+			c = std::tolower(c);
+		if (codepage == "ucs" or codepage == "usc2" or codepage == "ucs-16le" or codepage == "ucs-16be")
+			return 2;
+		if (codepage == "utf16" or codepage == "ucs16le" or codepage == "ucs16be" or codepage == "utf-16le" or codepage == "utf-16be")
+			return 2;
+		if (codepage == "unicode" or codepage == "_unicode")
+			return 2;
+
+		if (codepage == "usc4" or codepage == "ucs-32le" or codepage == "ucs-32be")
+			return 4;
+		if (codepage == "utf32" or codepage == "ucs32le" or codepage == "ucs32be" or codepage == "utf-32le" or codepage == "utf-32be")
+			return 4;
+
+		return 1;
 	}
 
 }

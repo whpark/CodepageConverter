@@ -22,12 +22,12 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 	wxBoxSizer* bSizer8;
 	bSizer8 = new wxBoxSizer( wxHORIZONTAL );
 
-	m_btnCheck = new wxButton( this, wxID_ANY, _("Check"), wxDefaultPosition, wxSize( 140,-1 ), 0 );
+	m_btnAnalyze = new wxButton( this, wxID_ANY, _("Analyze"), wxDefaultPosition, wxSize( 140,-1 ), 0 );
 
-	m_btnCheck->SetDefault();
-	m_btnCheck->SetFont( wxFont( 20, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxEmptyString ) );
+	m_btnAnalyze->SetDefault();
+	m_btnAnalyze->SetFont( wxFont( 20, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxEmptyString ) );
 
-	bSizer8->Add( m_btnCheck, 0, wxALL|wxEXPAND, 5 );
+	bSizer8->Add( m_btnAnalyze, 0, wxALL|wxEXPAND, 5 );
 
 	m_btnConvert = new wxButton( this, wxID_ANY, _("Convert"), wxDefaultPosition, wxSize( 140,-1 ), 0 );
 	m_btnConvert->SetFont( wxFont( 20, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxEmptyString ) );
@@ -62,23 +62,27 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 	m_cmbCodepageSrc->Append( _("932 - (Japanese)Shift JIS") );
 	m_cmbCodepageSrc->Append( _("943 - (Japanese)Shift JIS") );
 	m_cmbCodepageSrc->SetSelection( 0 );
+	m_cmbCodepageSrc->Enable( false );
+
 	bSizer3->Add( m_cmbCodepageSrc, 0, wxALL, 5 );
 
 	m_bitmap1 = new wxStaticBitmap( sbSizerOption->GetStaticBox(), wxID_ANY, wxArtProvider::GetBitmap( wxART_GO_FORWARD, wxART_FRAME_ICON ), wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer3->Add( m_bitmap1, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 
-	m_cmbCodepageDest = new wxComboBox( sbSizerOption->GetStaticBox(), wxID_ANY, _("65001 - UTF8 with BOM"), wxDefaultPosition, wxDefaultSize, 0, NULL, 0 );
-	m_cmbCodepageDest->Append( _("65001 - UTF8 with BOM") );
-	m_cmbCodepageDest->Append( _("65000 - UTF8") );
+	m_cmbCodepageDest = new wxComboBox( sbSizerOption->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, 0 );
+	m_cmbCodepageDest->Append( _("65001 - UTF8") );
 	m_cmbCodepageDest->Append( _("1200 - Unicode Little-Endian (for Windows)") );
-	m_cmbCodepageDest->Append( _("1201 - Unicode Big-Endian") );
 	m_cmbCodepageDest->SetSelection( 0 );
 	bSizer3->Add( m_cmbCodepageDest, 0, wxALL, 5 );
+
+	m_chkWriteBOM = new wxCheckBox( sbSizerOption->GetStaticBox(), wxID_ANY, _("Write BOM"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_chkWriteBOM->SetValue(true);
+	bSizer3->Add( m_chkWriteBOM, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 
 
 	fgSizer2->Add( bSizer3, 1, wxEXPAND, 5 );
 
-	m_staticText7 = new wxStaticText( sbSizerOption->GetStaticBox(), wxID_ANY, _("File Filter :"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText7 = new wxStaticText( sbSizerOption->GetStaticBox(), wxID_ANY, _("Filter (include):"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText7->Wrap( -1 );
 	fgSizer2->Add( m_staticText7, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 
@@ -89,7 +93,6 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 	m_cmbFilter->Append( _("*.cpp;*.cxx;*.h;*.hpp;*.hxx") );
 	m_cmbFilter->Append( _("*.txt") );
 	m_cmbFilter->Append( _("*.*") );
-	m_cmbFilter->Append( wxEmptyString );
 	m_cmbFilter->SetSelection( 0 );
 	m_cmbFilter->SetMinSize( wxSize( 400,-1 ) );
 
@@ -102,17 +105,17 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 
 	fgSizer2->Add( bSizer4, 1, wxEXPAND, 5 );
 
-	m_staticText71 = new wxStaticText( sbSizerOption->GetStaticBox(), wxID_ANY, _("Exclude Files :"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText71 = new wxStaticText( sbSizerOption->GetStaticBox(), wxID_ANY, _("Filter (exclude):"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText71->Wrap( -1 );
 	fgSizer2->Add( m_staticText71, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 
 	wxBoxSizer* bSizer5;
 	bSizer5 = new wxBoxSizer( wxHORIZONTAL );
 
-	m_comboBox41 = new wxComboBox( sbSizerOption->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( -1,-1 ), 0, NULL, 0 );
-	m_comboBox41->Append( _("resource.h") );
-	m_comboBox41->SetSelection( 0 );
-	bSizer5->Add( m_comboBox41, 1, wxALL|wxEXPAND, 5 );
+	m_cmbFilterExclude = new wxComboBox( sbSizerOption->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( -1,-1 ), 0, NULL, 0 );
+	m_cmbFilterExclude->Append( _("resource.h;.git/;.vs/;.vscode/;x64/;Debug/;Release/") );
+	m_cmbFilterExclude->SetSelection( 0 );
+	bSizer5->Add( m_cmbFilterExclude, 1, wxALL|wxEXPAND, 5 );
 
 	m_staticText81 = new wxStaticText( sbSizerOption->GetStaticBox(), wxID_ANY, _("( for Batch Job )"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText81->Wrap( -1 );
@@ -136,7 +139,8 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 	m_chkPreserveModifiedTime->SetValue(true);
 	bSizer11->Add( m_chkPreserveModifiedTime, 0, wxALL, 5 );
 
-	m_chkConvertAll = new wxCheckBox( sbSizerOption->GetStaticBox(), wxID_ANY, _("Convert ALL !"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_chkConvertAll = new wxCheckBox( sbSizerOption->GetStaticBox(), wxID_ANY, _("Convert ALL (if no selection) !"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_chkConvertAll->SetValue(true);
 	bSizer11->Add( m_chkConvertAll, 0, wxALL, 5 );
 
 
@@ -183,13 +187,87 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 
 	bSizerFolder->Add( bSizer12, 0, wxEXPAND, 5 );
 
-	m_lst = new wxTreeListCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTL_3STATE|wxTL_CHECKBOX|wxTL_MULTIPLE );
+	m_lst = new wxTreeListCtrl( this, wxID_ANY, wxDefaultPosition, wxSize( 400,-1 ), wxTL_MULTIPLE );
 	m_lst->AppendColumn( _("filename"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_LEFT, wxCOL_RESIZABLE );
 	m_lst->AppendColumn( _("encoding"), 100, wxALIGN_CENTER, wxCOL_RESIZABLE );
 	m_lst->AppendColumn( _("size"), 80, wxALIGN_RIGHT, wxCOL_RESIZABLE );
-	m_lst->AppendColumn( wxEmptyString, wxCOL_WIDTH_DEFAULT, wxALIGN_LEFT, wxCOL_RESIZABLE );
+	m_lst->AppendColumn( _("comments"), wxCOL_WIDTH_DEFAULT, wxALIGN_LEFT, wxCOL_RESIZABLE );
 
-	bSizerFolder->Add( m_lst, 1, wxALL|wxEXPAND, 5 );
+	bSizerFolder->Add( m_lst, 0, wxALL|wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer10;
+	bSizer10 = new wxBoxSizer( wxVERTICAL );
+
+	wxBoxSizer* bSizer111;
+	bSizer111 = new wxBoxSizer( wxHORIZONTAL );
+
+	m_staticText72 = new wxStaticText( this, wxID_ANY, _("Encoding :"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText72->Wrap( -1 );
+	bSizer111->Add( m_staticText72, 0, wxALL|wxALIGN_CENTER_VERTICAL, 0 );
+
+	m_cmbEncoding = new wxComboBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, 0 );
+	m_cmbEncoding->Append( _("detect") );
+	m_cmbEncoding->Append( _("as is") );
+	m_cmbEncoding->Append( _("utf-8 BOM") );
+	m_cmbEncoding->Append( _("utf-8") );
+	m_cmbEncoding->Append( _("utf-16") );
+	m_cmbEncoding->Append( _("utf-32") );
+	m_cmbEncoding->Append( _("EUC-KR") );
+	m_cmbEncoding->SetSelection( 0 );
+	bSizer111->Add( m_cmbEncoding, 0, wxALL, 0 );
+
+	m_btnConvertSelectedFile = new wxButton( this, wxID_ANY, _("Convert"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer111->Add( m_btnConvertSelectedFile, 0, wxRIGHT|wxLEFT, 5 );
+
+
+	bSizer10->Add( bSizer111, 0, wxEXPAND, 5 );
+
+	m_code = new wxStyledTextCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, wxEmptyString );
+	m_code->SetUseTabs( true );
+	m_code->SetTabWidth( 4 );
+	m_code->SetIndent( 4 );
+	m_code->SetTabIndents( true );
+	m_code->SetBackSpaceUnIndents( true );
+	m_code->SetViewEOL( false );
+	m_code->SetViewWhiteSpace( false );
+	m_code->SetMarginWidth( 2, 0 );
+	m_code->SetIndentationGuides( true );
+	m_code->SetReadOnly( false );
+	m_code->SetMarginType( 1, wxSTC_MARGIN_SYMBOL );
+	m_code->SetMarginMask( 1, wxSTC_MASK_FOLDERS );
+	m_code->SetMarginWidth( 1, 16);
+	m_code->SetMarginSensitive( 1, true );
+	m_code->SetProperty( wxT("fold"), wxT("1") );
+	m_code->SetFoldFlags( wxSTC_FOLDFLAG_LINEBEFORE_CONTRACTED | wxSTC_FOLDFLAG_LINEAFTER_CONTRACTED );
+	m_code->SetMarginType( 0, wxSTC_MARGIN_NUMBER );
+	m_code->SetMarginWidth( 0, m_code->TextWidth( wxSTC_STYLE_LINENUMBER, wxT("_99999") ) );
+	{
+		wxFont font = wxFont( 10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Cascadia Code") );
+		m_code->StyleSetFont( wxSTC_STYLE_DEFAULT, font );
+	}
+	m_code->MarkerDefine( wxSTC_MARKNUM_FOLDER, wxSTC_MARK_BOXPLUS );
+	m_code->MarkerSetBackground( wxSTC_MARKNUM_FOLDER, wxColour( wxT("BLACK") ) );
+	m_code->MarkerSetForeground( wxSTC_MARKNUM_FOLDER, wxColour( wxT("WHITE") ) );
+	m_code->MarkerDefine( wxSTC_MARKNUM_FOLDEROPEN, wxSTC_MARK_BOXMINUS );
+	m_code->MarkerSetBackground( wxSTC_MARKNUM_FOLDEROPEN, wxColour( wxT("BLACK") ) );
+	m_code->MarkerSetForeground( wxSTC_MARKNUM_FOLDEROPEN, wxColour( wxT("WHITE") ) );
+	m_code->MarkerDefine( wxSTC_MARKNUM_FOLDERSUB, wxSTC_MARK_EMPTY );
+	m_code->MarkerDefine( wxSTC_MARKNUM_FOLDEREND, wxSTC_MARK_BOXPLUS );
+	m_code->MarkerSetBackground( wxSTC_MARKNUM_FOLDEREND, wxColour( wxT("BLACK") ) );
+	m_code->MarkerSetForeground( wxSTC_MARKNUM_FOLDEREND, wxColour( wxT("WHITE") ) );
+	m_code->MarkerDefine( wxSTC_MARKNUM_FOLDEROPENMID, wxSTC_MARK_BOXMINUS );
+	m_code->MarkerSetBackground( wxSTC_MARKNUM_FOLDEROPENMID, wxColour( wxT("BLACK") ) );
+	m_code->MarkerSetForeground( wxSTC_MARKNUM_FOLDEROPENMID, wxColour( wxT("WHITE") ) );
+	m_code->MarkerDefine( wxSTC_MARKNUM_FOLDERMIDTAIL, wxSTC_MARK_EMPTY );
+	m_code->MarkerDefine( wxSTC_MARKNUM_FOLDERTAIL, wxSTC_MARK_EMPTY );
+	m_code->SetSelBackground( true, wxSystemSettings::GetColour( wxSYS_COLOUR_HIGHLIGHT ) );
+	m_code->SetSelForeground( true, wxSystemSettings::GetColour( wxSYS_COLOUR_HIGHLIGHTTEXT ) );
+	m_code->SetFont( wxFont( 10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Cascadia Code") ) );
+
+	bSizer10->Add( m_code, 1, wxEXPAND|wxTOP|wxBOTTOM|wxRIGHT, 5 );
+
+
+	bSizerFolder->Add( bSizer10, 1, wxEXPAND, 5 );
 
 
 	bSizerTOP->Add( bSizerFolder, 1, wxEXPAND, 5 );
@@ -201,16 +279,22 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 	this->Centre( wxBOTH );
 
 	// Connect Events
-	m_btnCheck->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Check ), NULL, this );
+	m_btnAnalyze->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Analyze ), NULL, this );
 	m_btnConvert->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Convert ), NULL, this );
 	m_btnBrowse->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Browse ), NULL, this );
+	m_lst->Connect( wxEVT_TREELIST_SELECTION_CHANGED, wxTreeListEventHandler( IMainWnd::OnTreelistSelectionChanged_Lst ), NULL, this );
+	m_cmbEncoding->Connect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( IMainWnd::OnCombobox_Encoding ), NULL, this );
+	m_btnConvertSelectedFile->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_ConvertSelectedFile ), NULL, this );
 }
 
 IMainWnd::~IMainWnd()
 {
 	// Disconnect Events
-	m_btnCheck->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Check ), NULL, this );
+	m_btnAnalyze->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Analyze ), NULL, this );
 	m_btnConvert->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Convert ), NULL, this );
 	m_btnBrowse->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Browse ), NULL, this );
+	m_lst->Disconnect( wxEVT_TREELIST_SELECTION_CHANGED, wxTreeListEventHandler( IMainWnd::OnTreelistSelectionChanged_Lst ), NULL, this );
+	m_cmbEncoding->Disconnect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( IMainWnd::OnCombobox_Encoding ), NULL, this );
+	m_btnConvertSelectedFile->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_ConvertSelectedFile ), NULL, this );
 
 }

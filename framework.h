@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <GL/glew.h>
+//#include <GL/glew.h>
 
 #include "wx/wx.h"
 #include "wx/dataview.h"

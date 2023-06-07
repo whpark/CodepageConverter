@@ -22,12 +22,13 @@
 #include <wx/stattext.h>
 #include <wx/combobox.h>
 #include <wx/statbmp.h>
-#include <wx/sizer.h>
 #include <wx/checkbox.h>
+#include <wx/sizer.h>
 #include <wx/statbox.h>
 #include <wx/filepicker.h>
 #include <wx/dirctrl.h>
 #include <wx/treelist.h>
+#include <wx/stc/stc.h>
 #include <wx/frame.h>
 
 ///////////////////////////////////////////////////////////////////////////
@@ -42,17 +43,18 @@ namespace ui
 		private:
 
 		protected:
-			wxButton* m_btnCheck;
+			wxButton* m_btnAnalyze;
 			wxButton* m_btnConvert;
 			wxStaticText* m_staticText5;
 			wxComboBox* m_cmbCodepageSrc;
 			wxStaticBitmap* m_bitmap1;
 			wxComboBox* m_cmbCodepageDest;
+			wxCheckBox* m_chkWriteBOM;
 			wxStaticText* m_staticText7;
 			wxComboBox* m_cmbFilter;
 			wxStaticText* m_staticText8;
 			wxStaticText* m_staticText71;
-			wxComboBox* m_comboBox41;
+			wxComboBox* m_cmbFilterExclude;
 			wxStaticText* m_staticText81;
 			wxStaticText* m_staticText14;
 			wxCheckBox* m_chkBackupOriginalFiles;
@@ -62,16 +64,23 @@ namespace ui
 			wxButton* m_btnBrowse;
 			wxGenericDirCtrl* m_dir;
 			wxTreeListCtrl* m_lst;
+			wxStaticText* m_staticText72;
+			wxComboBox* m_cmbEncoding;
+			wxButton* m_btnConvertSelectedFile;
+			wxStyledTextCtrl* m_code;
 
 			// Virtual event handlers, override them in your derived class
-			virtual void OnButtonClick_Check( wxCommandEvent& event ) = 0;
+			virtual void OnButtonClick_Analyze( wxCommandEvent& event ) = 0;
 			virtual void OnButtonClick_Convert( wxCommandEvent& event ) = 0;
 			virtual void OnButtonClick_Browse( wxCommandEvent& event ) = 0;
+			virtual void OnTreelistSelectionChanged_Lst( wxTreeListEvent& event ) = 0;
+			virtual void OnCombobox_Encoding( wxCommandEvent& event ) = 0;
+			virtual void OnButtonClick_ConvertSelectedFile( wxCommandEvent& event ) = 0;
 
 
 		public:
 
-			IMainWnd( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Desktop"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 979,544 ), long style = wxDEFAULT_FRAME_STYLE|wxMAXIMIZE_BOX|wxMINIMIZE_BOX|wxTAB_TRAVERSAL );
+			IMainWnd( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Desktop"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 1261,721 ), long style = wxDEFAULT_FRAME_STYLE|wxMAXIMIZE_BOX|wxMINIMIZE_BOX|wxTAB_TRAVERSAL );
 
 			~IMainWnd();
 

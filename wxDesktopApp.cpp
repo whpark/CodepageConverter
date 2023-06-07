@@ -8,6 +8,11 @@
 wxIMPLEMENT_APP(wxDesktopApp);
 
 bool wxDesktopApp::OnInit() {
+//#ifdef _DEBUG
+//	m_wndLog = std::make_unique<wxLogWindow>(m_wndMain.get(), wxString(L"Log"));
+//	m_wndLog->Show(true);
+//	m_wndLog->PassMessages(false);
+//#endif
 	m_reg.Create();
 
 	// Startup Folder
@@ -21,10 +26,6 @@ bool wxDesktopApp::OnInit() {
 	m_wndMain = std::make_unique<xMainWnd>(nullptr);
 	m_wndMain->Show();
 
-#ifdef _DEBUG
-	m_wndLog = std::make_unique<wxLogWindow>(m_wndMain.get(), wxString(L"Log"));
-	m_wndLog->Show(true);
-#endif
 	return true;
 }
 

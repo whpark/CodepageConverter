@@ -82,5 +82,6 @@
     <None Include="wxUI.fbp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="README.md" />
   </ItemGroup>
 </Project>
