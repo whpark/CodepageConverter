@@ -129,7 +129,20 @@ bool xMainWnd::AnalyzePath(wxTreeListCtrl& lst, wxTreeListItem const& parent,
 	}
 	else if (ec.clear(); stdfs::is_directory(path0, ec)) {
 		ec.clear();
+		std::vector<std::filesystem::directory_entry> dirs;
 		for (auto entry : stdfs::directory_iterator(path0, ec)) {
+			dirs.push_back(entry);
+		}
+		// sort
+		std::sort(dirs.begin(), dirs.end(), [](auto const& lhs, auto const& rhs) {
+			bool const is_lhs_dir = lhs.is_directory();
+			bool const is_rhs_dir = rhs.is_directory();
+			if (!(is_lhs_dir xor is_rhs_dir))
+				return lhs.path().filename().wstring() < rhs.path().filename().wstring();
+			else
+				return is_lhs_dir;
+		});
+		for (auto const& entry : dirs) {
 			auto const& path = entry.path();
 			if (entry.is_directory()) {
 				if (!FilterFileMultiFilter(filter.filtersFolder, path.filename().c_str(), L";"))
@@ -281,7 +294,14 @@ void xMainWnd::OnButtonClick_Analyze(wxCommandEvent& event) {
 }
 
 void xMainWnd::OnButtonClick_Convert(wxCommandEvent& event) {
+	// Get Item Count from m_lst
 	std::vector<stdfs::path> paths;
+
+	wxTreeListItems items;
+	m_lst->GetSelections(items);
+	if (items.empty()) {
+	}
+	m_lst->GetFirstItem();
 }
 
 void xMainWnd::OnButtonClick_Browse(wxCommandEvent& event) {
