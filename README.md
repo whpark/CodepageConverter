@@ -1,1 +1,3 @@
-# CodepageConverter2
+# CodepageConverter
+
+dependency : wxWidgets, gtl, fmt, ...
