@@ -211,10 +211,10 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 	m_lst->AppendColumn( _("size"), 80, wxALIGN_RIGHT, wxCOL_RESIZABLE );
 	m_lst->AppendColumn( _("comments"), wxCOL_WIDTH_DEFAULT, wxALIGN_LEFT, wxCOL_RESIZABLE );
 
-	bSizer131->Add( m_lst, 1, wxALL|wxEXPAND, 5 );
+	bSizer131->Add( m_lst, 1, wxEXPAND|wxBOTTOM|wxRIGHT|wxLEFT, 5 );
 
 
-	bSizerFolder->Add( bSizer131, 1, wxEXPAND, 5 );
+	bSizerFolder->Add( bSizer131, 0, wxEXPAND, 5 );
 
 	wxBoxSizer* bSizer10;
 	bSizer10 = new wxBoxSizer( wxVERTICAL );
@@ -287,7 +287,7 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 	m_code->SetSelForeground( true, wxSystemSettings::GetColour( wxSYS_COLOUR_HIGHLIGHTTEXT ) );
 	m_code->SetFont( wxFont( 10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Cascadia Code") ) );
 
-	bSizer10->Add( m_code, 1, wxEXPAND|wxTOP|wxBOTTOM|wxRIGHT, 5 );
+	bSizer10->Add( m_code, 1, wxEXPAND|wxBOTTOM|wxRIGHT, 5 );
 
 
 	bSizerFolder->Add( bSizer10, 1, wxEXPAND, 5 );
