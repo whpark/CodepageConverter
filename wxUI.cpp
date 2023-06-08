@@ -187,13 +187,34 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 
 	bSizerFolder->Add( bSizer12, 0, wxEXPAND, 5 );
 
-	m_lst = new wxTreeListCtrl( this, wxID_ANY, wxDefaultPosition, wxSize( 400,-1 ), wxTL_MULTIPLE );
-	m_lst->AppendColumn( _("filename"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_LEFT, wxCOL_RESIZABLE );
+	wxBoxSizer* bSizer131;
+	bSizer131 = new wxBoxSizer( wxVERTICAL );
+
+	wxBoxSizer* bSizer15;
+	bSizer15 = new wxBoxSizer( wxHORIZONTAL );
+
+	m_btnOpenFileWith1 = new wxButton( this, wxID_ANY, _("notepad++"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer15->Add( m_btnOpenFileWith1, 0, wxALL|wxEXPAND, 5 );
+
+	m_btnOpenFileWith2 = new wxButton( this, wxID_ANY, _("vscode"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer15->Add( m_btnOpenFileWith2, 0, wxALL|wxEXPAND, 5 );
+
+	m_btnOpenFileWith3 = new wxButton( this, wxID_ANY, _("shell"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer15->Add( m_btnOpenFileWith3, 0, wxALL, 5 );
+
+
+	bSizer131->Add( bSizer15, 0, wxEXPAND, 5 );
+
+	m_lst = new wxTreeListCtrl( this, wxID_ANY, wxDefaultPosition, wxSize( 500,-1 ), wxTL_MULTIPLE );
+	m_lst->AppendColumn( _("filename"), 370, wxALIGN_LEFT, wxCOL_RESIZABLE );
 	m_lst->AppendColumn( _("encoding"), 100, wxALIGN_CENTER, wxCOL_RESIZABLE );
 	m_lst->AppendColumn( _("size"), 80, wxALIGN_RIGHT, wxCOL_RESIZABLE );
 	m_lst->AppendColumn( _("comments"), wxCOL_WIDTH_DEFAULT, wxALIGN_LEFT, wxCOL_RESIZABLE );
 
-	bSizerFolder->Add( m_lst, 0, wxALL|wxEXPAND, 5 );
+	bSizer131->Add( m_lst, 1, wxALL|wxEXPAND, 5 );
+
+
+	bSizerFolder->Add( bSizer131, 1, wxEXPAND, 5 );
 
 	wxBoxSizer* bSizer10;
 	bSizer10 = new wxBoxSizer( wxVERTICAL );
@@ -205,19 +226,21 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 	m_staticText72->Wrap( -1 );
 	bSizer111->Add( m_staticText72, 0, wxALL|wxALIGN_CENTER_VERTICAL, 0 );
 
-	m_cmbEncoding = new wxComboBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, 0 );
-	m_cmbEncoding->Append( _("detect") );
-	m_cmbEncoding->Append( _("as is") );
-	m_cmbEncoding->Append( _("utf-8 BOM") );
-	m_cmbEncoding->Append( _("utf-8") );
-	m_cmbEncoding->Append( _("utf-16") );
-	m_cmbEncoding->Append( _("utf-32") );
-	m_cmbEncoding->Append( _("EUC-KR") );
-	m_cmbEncoding->SetSelection( 0 );
-	bSizer111->Add( m_cmbEncoding, 0, wxALL, 0 );
+	m_text_codepage_source = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	bSizer111->Add( m_text_codepage_source, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	m_cmbEncodingSource = new wxComboBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, 0 );
+	m_cmbEncodingSource->Append( _("detect") );
+	m_cmbEncodingSource->Append( _("utf-8") );
+	m_cmbEncodingSource->Append( _("utf-16") );
+	m_cmbEncodingSource->Append( _("utf-32") );
+	m_cmbEncodingSource->Append( _("EUC-KR") );
+	m_cmbEncodingSource->Append( _("Shift_JIS") );
+	m_cmbEncodingSource->SetSelection( 0 );
+	bSizer111->Add( m_cmbEncodingSource, 0, wxALL|wxALIGN_CENTER_VERTICAL, 0 );
 
 	m_btnConvertSelectedFile = new wxButton( this, wxID_ANY, _("Convert"), wxDefaultPosition, wxDefaultSize, 0 );
-	bSizer111->Add( m_btnConvertSelectedFile, 0, wxRIGHT|wxLEFT, 5 );
+	bSizer111->Add( m_btnConvertSelectedFile, 0, wxRIGHT|wxLEFT|wxALIGN_CENTER_VERTICAL, 5 );
 
 
 	bSizer10->Add( bSizer111, 0, wxEXPAND, 5 );
@@ -281,9 +304,13 @@ IMainWnd::IMainWnd( wxWindow* parent, wxWindowID id, const wxString& title, cons
 	// Connect Events
 	m_btnAnalyze->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Analyze ), NULL, this );
 	m_btnConvert->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Convert ), NULL, this );
+	m_browser->Connect( wxEVT_COMMAND_DIRPICKER_CHANGED, wxFileDirPickerEventHandler( IMainWnd::OnDirChanged_Browser ), NULL, this );
 	m_btnBrowse->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Browse ), NULL, this );
+	m_btnOpenFileWith1->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_OpenWith1 ), NULL, this );
+	m_btnOpenFileWith2->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_OpenWith2 ), NULL, this );
+	m_btnOpenFileWith3->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_OpenWith3 ), NULL, this );
 	m_lst->Connect( wxEVT_TREELIST_SELECTION_CHANGED, wxTreeListEventHandler( IMainWnd::OnTreelistSelectionChanged_Lst ), NULL, this );
-	m_cmbEncoding->Connect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( IMainWnd::OnCombobox_Encoding ), NULL, this );
+	m_cmbEncodingSource->Connect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( IMainWnd::OnCombobox_EncodingSource ), NULL, this );
 	m_btnConvertSelectedFile->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_ConvertSelectedFile ), NULL, this );
 }
 
@@ -292,9 +319,13 @@ IMainWnd::~IMainWnd()
 	// Disconnect Events
 	m_btnAnalyze->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Analyze ), NULL, this );
 	m_btnConvert->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Convert ), NULL, this );
+	m_browser->Disconnect( wxEVT_COMMAND_DIRPICKER_CHANGED, wxFileDirPickerEventHandler( IMainWnd::OnDirChanged_Browser ), NULL, this );
 	m_btnBrowse->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_Browse ), NULL, this );
+	m_btnOpenFileWith1->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_OpenWith1 ), NULL, this );
+	m_btnOpenFileWith2->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_OpenWith2 ), NULL, this );
+	m_btnOpenFileWith3->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_OpenWith3 ), NULL, this );
 	m_lst->Disconnect( wxEVT_TREELIST_SELECTION_CHANGED, wxTreeListEventHandler( IMainWnd::OnTreelistSelectionChanged_Lst ), NULL, this );
-	m_cmbEncoding->Disconnect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( IMainWnd::OnCombobox_Encoding ), NULL, this );
+	m_cmbEncodingSource->Disconnect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( IMainWnd::OnCombobox_EncodingSource ), NULL, this );
 	m_btnConvertSelectedFile->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( IMainWnd::OnButtonClick_ConvertSelectedFile ), NULL, this );
 
 }

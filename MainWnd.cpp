@@ -99,6 +99,31 @@ xMainWnd::xMainWnd( wxWindow* parent ) : ui::IMainWnd( parent ) {
 
 }
 
+void CollectChild(wxTreeListItems& items, wxTreeListCtrl& lst, wxTreeListItem const& parent) {
+	for (auto child = lst.GetFirstChild(parent); child.IsOk(); child = lst.GetNextSibling(child)) {
+		if (std::ranges::find(items, child) == items.end())
+			items.push_back(child);
+		CollectChild(items, lst, child);
+	}
+};
+
+wxTreeListItems xMainWnd::GetSelectedItems(bool bAllIfNone) {
+	wxTreeListItems items;
+	m_lst->GetSelections(items);
+	if (items.empty()) {
+		// if no select collect all items.
+		CollectChild(items, *m_lst, m_lst->GetRootItem());
+	}
+	else {
+		// collect child items.
+		for (auto item : items) {
+			if (is_directory(GetSelectedFilePath(item)))
+				CollectChild(items, *m_lst, item);
+		}
+	}
+	return items;
+}
+
 bool xMainWnd::AnalyzePath(wxTreeListCtrl& lst, wxTreeListItem const& parent,
 	std::filesystem::path const& path0, xMainWnd::FILTER const& filter)
 {
@@ -109,23 +134,14 @@ bool xMainWnd::AnalyzePath(wxTreeListCtrl& lst, wxTreeListItem const& parent,
 		if (!item)
 			return false;
 
-		auto e = gtl::ReadFileBOM(path0);	// Check BOM
-		std::wstring strEncoding;
-		std::wstring strComments;
-		switch (e) {
-			using enum gtl::eFILE_TYPE;
-		case utf8: strEncoding = L"UTF-8 BOM"; break;
-		case utf16le: strEncoding = L"UTF-16LE BOM"; break;
-		case utf16be: strEncoding = L"UTF-16BE BOM"; break;
-		case utf32le: strEncoding = L"UTF-32LE BOM"; break;
-		case utf32be: strEncoding = L"UTF-32BE BOM"; break;
-		case unknown:
-		default:
-			strEncoding = wxString(gtl::DetectCodepage(path0));
-			break;
-		}
+		auto [codepage, bom] = m_codepage_detector.DetectCodepage(path0);
+		wxString strEncoding;
+		//wxString strComments;
+		strEncoding = codepage;
+		if (bom)
+			strEncoding += L" BOM";
 		lst.SetItemText(item, std::to_underlying(eLST_COL::encoding), strEncoding);
-		lst.SetItemText(item, std::to_underlying(eLST_COL::comments), strComments);
+		//lst.SetItemText(item, std::to_underlying(eLST_COL::comments), strComments);
 	}
 	else if (ec.clear(); stdfs::is_directory(path0, ec)) {
 		ec.clear();
@@ -165,11 +181,11 @@ bool xMainWnd::AnalyzePath(wxTreeListCtrl& lst, wxTreeListItem const& parent,
 	return true;
 }
 
-void xMainWnd::SaveCurrentFolderPath(wxString const& strFolder) {
+void xMainWnd::SaveCurrentFolderPath(std::filesystem::path const& folder) {
 	auto& app = wxGetApp();
 	wxRegKey reg(app.m_reg, L"misc");
 	reg.Create();
-	reg.SetValue(L"LastFolder", strFolder);
+	reg.SetValue(L"LastFolder", folder.wstring());
 }
 
 std::filesystem::path xMainWnd::GetSelectedFilePath(wxTreeListItem item) {
@@ -199,7 +215,7 @@ std::filesystem::path xMainWnd::GetSelectedFilePath(wxTreeListItem item) {
 	return path;
 }
 
-bool xMainWnd::ConvertFileEncoding(std::filesystem::path const& path, int codepage, bool bWriteBOM, bool bBackup, bool bPreserveTimestamps) {
+bool xMainWnd::ConvertFileEncoding(std::filesystem::path const& path, std::string const& codepage_source, int codepage_target, bool bWriteBOM, bool bBackup, bool bPreserveTimestamps) {
 	std::error_code ec;
 	auto t0 = std::filesystem::last_write_time(path, ec);
 	if (ec)
@@ -207,27 +223,25 @@ bool xMainWnd::ConvertFileEncoding(std::filesystem::path const& path, int codepa
 	auto pathD = path;
 	pathD.replace_extension(path.extension().wstring() + L"._tmp_");
 
-	switch (codepage) {
+	switch (codepage_target) {
 	case 65001:
-		{
-			auto str = ReadFileAs<char8_t>(path, ec);
+		if (auto str = ReadFileAs<char8_t>(path, codepage_source, ec)) {
 			if (ec)
 				return false;
 			gtl::xOFArchive ar(pathD);
 			if (bWriteBOM)
 				ar.WriteCodepageBOM(gtl::eCODEPAGE::UTF8);
-			ar.Write(str.c_str(), str.size());
+			ar.Write(str->c_str(), str->size());
 		}
 		break;
 	case 1200:
-		{
-			auto str = ReadFileAs<wchar_t>(path, ec);
+		if (auto str = ReadFileAs<wchar_t>(path, codepage_source, ec)) {
 			if (ec)
 				return false;
 			gtl::xOFArchive ar(pathD);
 			if (bWriteBOM)
 				ar.WriteCodepageBOM(gtl::eCODEPAGE::UCS2);
-			ar.Write(str.c_str(), str.size()*sizeof(wchar_t));
+			ar.Write(str->c_str(), str->size()*sizeof(wchar_t));
 		}
 		break;
 	}
@@ -261,8 +275,10 @@ void xMainWnd::OnButtonClick_Analyze(wxCommandEvent& event) {
 	if (path.empty())
 		return;
 
-	m_folderCurrent = path;
-	SaveCurrentFolderPath(path.wstring());
+	wxBusyCursor wc;
+
+	m_folderCurrent = is_directory(path) ? path : path.parent_path();
+	SaveCurrentFolderPath(m_folderCurrent);
 
 	m_lst->DeleteAllItems();
 
@@ -294,14 +310,48 @@ void xMainWnd::OnButtonClick_Analyze(wxCommandEvent& event) {
 }
 
 void xMainWnd::OnButtonClick_Convert(wxCommandEvent& event) {
-	// Get Item Count from m_lst
-	std::vector<stdfs::path> paths;
-
-	wxTreeListItems items;
-	m_lst->GetSelections(items);
-	if (items.empty()) {
+	auto strCodepage = m_cmbCodepageDest->GetValue().ToStdString();
+	if (strCodepage.empty()) {
+		wxMessageBox(L"Select Codepage");
+		return;
 	}
-	m_lst->GetFirstItem();
+
+	wxTreeListItems selected = GetSelectedItems(true);
+	if (selected.empty()) {
+		return;
+	}
+	// Get Item Count from m_lst
+	struct ITEM {
+		wxTreeListItem item;
+		stdfs::path path;
+		std::string encoding_source;
+	};
+	std::vector<ITEM> items;
+	// Get Path and encoding from m_lst
+	for (auto item : selected) {
+		auto path = GetSelectedFilePath(item);
+		auto encoding = m_lst->GetItemText(item, std::to_underlying(eLST_COL::encoding)).ToStdString();
+		if (!path.empty() and is_regular_file(path) and !is_directory(path))
+			items.emplace_back(item, std::move(path), std::move(encoding));
+	}
+
+	// ensure if files are very many.
+	if ( (items.size() > 30)
+		and (wxMessageBox(std::format(L"Are you sure to convert {} files?", items.size()), L"Confirm", wxYES_NO) != wxYES))
+	{
+		return;
+	}
+
+	int codepage_target = std::stoi(strCodepage);
+	bool bWriteBOM = m_chkWriteBOM->IsChecked();
+	bool bBackup = m_chkBackupOriginalFiles->IsChecked();
+	bool bPreserveTimestamps = m_chkPreserveModifiedTime->IsChecked();
+	for (auto const& i : items) {
+		ConvertFileEncoding(i.path, i.encoding_source, codepage_target, bWriteBOM, bBackup, bPreserveTimestamps);
+		auto [codepage, bom] = m_codepage_detector.DetectCodepage(i.path);
+		m_lst->SetItemText(i.item, std::to_underlying(eLST_COL::encoding), std::format("{}{}", codepage, bom ? " BOM" : ""));
+	}
+
 }
 
 void xMainWnd::OnButtonClick_Browse(wxCommandEvent& event) {
@@ -311,7 +361,7 @@ void xMainWnd::OnButtonClick_Browse(wxCommandEvent& event) {
 	m_dir->ExpandPath(strFolder);
 	m_dir->SelectPath(strFolder);
 
-	SaveCurrentFolderPath(strFolder);
+	SaveCurrentFolderPath(std::filesystem::path{strFolder.ToStdWstring()});
 }
 
 void xMainWnd::OnTreelistSelectionChanged_Lst(wxTreeListEvent& event) {
@@ -347,8 +397,8 @@ void xMainWnd::OnTreelistSelectionChanged_Lst(wxTreeListEvent& event) {
 			std::string s;
 			s.resize(size);
 			ar.Read<char>(s.data(), s.size());
-			auto codepage = gtl::DetectCodepage(std::string_view(s));
-			m_cmbEncoding->SetValue(codepage);
+			auto codepage = m_codepage_detector.DetectCodepage(std::string_view(s));
+			m_text_codepage_source->SetValue(codepage);
 			// using ICU, convert string to wstring
 			gtl::Ticonv<wchar_t, char> conv(nullptr, codepage.c_str());
 			str = conv.Convert(s).value_or(L"");
@@ -359,18 +409,55 @@ void xMainWnd::OnTreelistSelectionChanged_Lst(wxTreeListEvent& event) {
 	m_code->SetText(str);
 }
 
-void xMainWnd::OnCombobox_Encoding(wxCommandEvent& event) {
+void xMainWnd::OpenFileWith(std::wstring const& cmd) {
+	// open file with notepad++
+	auto path = GetSelectedFilePath();
+	if (path.empty())
+		return;
+	// execute notepad with path
+	ShellExecuteW(nullptr, L"open", cmd.c_str(), path.c_str(), nullptr, SW_SHOW);
+}
+
+void xMainWnd::OnButtonClick_OpenWith1(wxCommandEvent& event) {
+	OpenFileWith(L"notepad++.exe");
+}
+
+void xMainWnd::OnButtonClick_OpenWith2(wxCommandEvent& event) {
+	OpenFileWith(L"code");
+}
+
+void xMainWnd::OnButtonClick_OpenWith3(wxCommandEvent& event) {
+	OpenFileWith(L"");
+}
+
+void xMainWnd::OnCombobox_EncodingSource(wxCommandEvent& event) {
+	m_code->ClearAll();
+
+	auto strCodepage = m_cmbEncodingSource->GetValue().ToStdString();
+	if (strCodepage == "detect")
+		strCodepage.clear();
+
+	auto path = GetSelectedFilePath();
+	if (path.empty())
+		return;
+
+	std::error_code ec;
+	if (auto str = ReadFileAs<wchar_t>(path, strCodepage, ec))
+		m_code->SetText(*str);
 }
 
 void xMainWnd::OnButtonClick_ConvertSelectedFile(wxCommandEvent& event) {
+	m_code->Clear();
+
 	auto path = GetSelectedFilePath();
 	auto strCodepage = m_cmbCodepageDest->GetValue().ToStdString();
+	auto strCodepageSource = m_cmbEncodingSource->GetValue().ToStdString();
 	if (strCodepage.empty())
 		return;
 	int codepage = std::stoi(strCodepage);
 
 	std::error_code ec;
-	ConvertFileEncoding(path, codepage, m_chkWriteBOM->IsChecked(), m_chkBackupOriginalFiles->IsChecked(), m_chkPreserveModifiedTime->IsChecked());
+	ConvertFileEncoding(path, strCodepageSource, codepage, m_chkWriteBOM->IsChecked(), m_chkBackupOriginalFiles->IsChecked(), m_chkPreserveModifiedTime->IsChecked());
 	//auto size_char = GetCharSizeFromCodepage(strCodepage);
 }
 

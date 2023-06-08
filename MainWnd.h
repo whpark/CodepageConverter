@@ -31,26 +31,29 @@ public:
 	}
 
 protected:
+	gtl::xCodepageDetector m_codepage_detector;
 	std::filesystem::path m_folderCurrent;
+	std::optional<std::jthread> m_threadConverter;
+
+	wxTreeListItems GetSelectedItems(bool bAllIfNone = false);
+
 	enum class eLST_COL : int { filename, encoding, size, comments };
 	struct FILTER {
 		std::wstring filters, filtersExclude, filtersFolder, filtersFolderExclude;
 	};
 	bool AnalyzePath(wxTreeListCtrl& lst, wxTreeListItem const& parent, std::filesystem::path const& path, FILTER const& filter);
 	
-	void SaveCurrentFolderPath(wxString const& strFolder);
+	void SaveCurrentFolderPath(std::filesystem::path const& strFolder);
 	std::filesystem::path GetSelectedFilePath(wxTreeListItem item = {});
 
 	template <typename tchar>
-	std::basic_string<tchar> ReadFileAs(std::filesystem::path const& path, std::error_code& ec) {
+	std::optional<std::basic_string<tchar>> ReadFileAs(std::filesystem::path const& path, std::string codepage, std::error_code& ec) {
 		ec.clear();
 		auto size = std::filesystem::file_size(path, ec);
 		if (ec) {
-			auto w = ec.message();
 			return {};
 		}
 		std::basic_string<tchar> str;
-		str.reserve(size/sizeof(tchar)+1);
 
 		gtl::xIFArchive ar(path);
 		auto bom = ar.ReadCodepageBOM(gtl::eCODEPAGE::DEFAULT);
@@ -60,51 +63,64 @@ protected:
 		case gtl::eCODEPAGE::UTF16BE:
 		case gtl::eCODEPAGE::UTF32LE:
 		case gtl::eCODEPAGE::UTF32BE:
+			m_text_codepage_source->SetValue(std::format("{} BOM", GetCodepageName(bom)));
+			str.reserve(size/sizeof(tchar)+1);
 			while (auto r = ar.ReadLine<tchar>('\n', false)) {
 				str += *r;
 				str += '\n';
 			}
-			break;
+			return str;
+
 		default:
 			{
 				std::string s;
 				s.resize(size);
 				ar.Read<char>(s.data(), s.size());
-				auto codepage = gtl::DetectCodepage(std::string_view(s));
-				m_cmbEncoding->SetValue(codepage);
+				if (codepage.empty()) {
+					codepage = m_codepage_detector.DetectCodepage(std::string_view(s));
+					m_text_codepage_source->SetValue(codepage);
+				}
 				// using ICU, convert string to wstring
 				gtl::Ticonv<tchar, char> conv(nullptr, codepage.c_str());
 				if (auto r = conv.Convert(s)) {
-					str = *r;
+					str = std::move(*r);
 					if (codepage.contains("JIS")) {
 						using string_t = std::basic_string<tchar>;
 						static std::pair<string_t, string_t> const pairs[]{
 							{gtl::ToUTFString<tchar>(u8"‾"sv), gtl::ToUTFString<tchar>(u8"~"sv)},
-							{gtl::ToUTFString<tchar>(u8"¥"sv), gtl::ToUTFString<tchar>(u8"\\"sv)} };
+							{gtl::ToUTFString<tchar>(u8"¥"sv), gtl::ToUTFString<tchar>(u8"\\"sv)},
+						};
 						for (auto& p : pairs) {
 							for (auto pos = str.find(p.first); pos != str.npos; pos = str.find(p.first, pos + p.second.size())) {
 								str.replace(pos, p.first.size(), p.second);
 							}
 						}
 					}
+					return str;
 				}
 			}
 			break;
 		}
-		return str;
+		return {};
 	}
 
-	bool ConvertFileEncoding(std::filesystem::path const& path, int codepage, bool bWriteBOM, bool bBackup, bool bPreserveTimestamps);
-	
+	bool ConvertFileEncoding(std::filesystem::path const& path, std::string const& codepage_source, int codepage_target, bool bWriteBOM, bool bBackup, bool bPreserveTimestamps);
+
 public:
 	virtual void OnButtonClick_Analyze( wxCommandEvent& event ) override;
 	virtual void OnButtonClick_Convert( wxCommandEvent& event ) override;
 
+	virtual void OnDirChanged_Browser( wxFileDirPickerEvent& event ) override{};
 	virtual void OnButtonClick_Browse( wxCommandEvent& event ) override;
 
 	virtual void OnTreelistSelectionChanged_Lst( wxTreeListEvent& event ) override;
 
-	virtual void OnCombobox_Encoding( wxCommandEvent& event ) override;
+	void OpenFileWith(std::wstring const& cmd);
+	virtual void OnButtonClick_OpenWith1( wxCommandEvent& event ) override;
+	virtual void OnButtonClick_OpenWith2( wxCommandEvent& event ) override;
+	virtual void OnButtonClick_OpenWith3( wxCommandEvent& event ) override;
+
+	virtual void OnCombobox_EncodingSource( wxCommandEvent& event ) override;
 	virtual void OnButtonClick_ConvertSelectedFile( wxCommandEvent& event ) override;
 };
 
