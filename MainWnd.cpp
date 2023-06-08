@@ -194,14 +194,14 @@ std::filesystem::path xMainWnd::GetSelectedFilePath(wxTreeListItem item) {
 	if (folder.empty() or !std::filesystem::is_directory(folder))
 		return path;
 
-	if (!item) {
+	if (!item.IsOk()) {
 		wxTreeListItems items;
 		m_lst->GetSelections(items);
 		if (items.size() != 1)
 			return path;
 		item = items[0];
 	}
-	if (!item)
+	if (!item.IsOk())
 		return path;
 
 	auto strFilename = m_lst->GetItemText(item, std::to_underlying(eLST_COL::filename));
@@ -418,7 +418,11 @@ void xMainWnd::OnCombobox_EncodingSource(wxCommandEvent& event) {
 void xMainWnd::OnButtonClick_ConvertSelectedFile(wxCommandEvent& event) {
 	m_code->Clear();
 
-	auto path = GetSelectedFilePath();
+	auto selected = GetSelectedItems(false);
+	if (selected.size() != 1)
+		return;
+	auto item = selected[0];
+	auto path = GetSelectedFilePath(item);
 	auto strCodepage = m_cmbCodepageDest->GetValue().ToStdString();
 	auto strCodepageSource = m_cmbEncodingSource->GetValue().ToStdString();
 	if (strCodepage.empty())
@@ -427,7 +431,8 @@ void xMainWnd::OnButtonClick_ConvertSelectedFile(wxCommandEvent& event) {
 
 	std::error_code ec;
 	ConvertFileEncoding(path, strCodepageSource, codepage, m_chkWriteBOM->IsChecked(), m_chkBackupOriginalFiles->IsChecked(), m_chkPreserveModifiedTime->IsChecked());
-	//auto size_char = GetCharSizeFromCodepage(strCodepage);
+	auto [codepage_new, bom] = m_codepage_detector.DetectCodepage(path);
+	m_lst->SetItemText(item, std::to_underlying(eLST_COL::encoding), std::format("{}{}", codepage_new, bom ? " BOM" : ""));
 }
 
 //=================================================================================================================================
