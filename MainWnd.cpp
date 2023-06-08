@@ -225,23 +225,23 @@ bool xMainWnd::ConvertFileEncoding(std::filesystem::path const& path, std::strin
 
 	switch (codepage_target) {
 	case 65001:
-		if (auto str = ReadFileAs<char8_t>(path, codepage_source, ec)) {
+		if (auto r = m_codepage_detector.ReadFileAs<char8_t>(path, codepage_source, ec)) {
 			if (ec)
 				return false;
 			gtl::xOFArchive ar(pathD);
 			if (bWriteBOM)
 				ar.WriteCodepageBOM(gtl::eCODEPAGE::UTF8);
-			ar.Write(str->c_str(), str->size());
+			ar.Write(r->str.c_str(), r->str.size());
 		}
 		break;
 	case 1200:
-		if (auto str = ReadFileAs<wchar_t>(path, codepage_source, ec)) {
+		if (auto r = m_codepage_detector.ReadFileAs<wchar_t>(path, codepage_source, ec)) {
 			if (ec)
 				return false;
 			gtl::xOFArchive ar(pathD);
 			if (bWriteBOM)
 				ar.WriteCodepageBOM(gtl::eCODEPAGE::UCS2);
-			ar.Write(str->c_str(), str->size()*sizeof(wchar_t));
+			ar.Write(r->str.c_str(), r->str.size()*sizeof(wchar_t));
 		}
 		break;
 	}
@@ -366,47 +366,14 @@ void xMainWnd::OnButtonClick_Browse(wxCommandEvent& event) {
 
 void xMainWnd::OnTreelistSelectionChanged_Lst(wxTreeListEvent& event) {
 	auto path = GetSelectedFilePath(event.GetItem());
-	//auto type = gtl::ReadFileBOM(path);
-	std::error_code ec;
-	auto size = std::filesystem::file_size(path, ec);
-	if (ec) {
-		auto w = ec.message();
+	if (path.empty())
 		return;
-	}
-	wxString str;
-	gtl::xIFArchive ar(path);
-	auto bom = ar.ReadCodepageBOM(gtl::eCODEPAGE::ANSI_WINDOWS);
-	switch (bom) {
-	case gtl::eCODEPAGE::UTF8:
-		while (auto r = ar.ReadLineU8()) {
-			str += wxString(gtl::ToStringW(*r));
-			str += "\r\n";
-		}
-		break;
-	case gtl::eCODEPAGE::UTF16LE:
-	case gtl::eCODEPAGE::UTF16BE:
-	case gtl::eCODEPAGE::UTF32LE:
-	case gtl::eCODEPAGE::UTF32BE:
-		while (auto r = ar.ReadLineW()) {
-			str += wxString(*r);
-			str += L"\r\n";
-		}
-		break;
-	default:
-		{
-			std::string s;
-			s.resize(size);
-			ar.Read<char>(s.data(), s.size());
-			auto codepage = m_codepage_detector.DetectCodepage(std::string_view(s));
-			m_text_codepage_source->SetValue(codepage);
-			// using ICU, convert string to wstring
-			gtl::Ticonv<wchar_t, char> conv(nullptr, codepage.c_str());
-			str = conv.Convert(s).value_or(L"");
-		}
-		break;
-	}
 
-	m_code->SetText(str);
+	std::error_code ec;
+	if (auto r = m_codepage_detector.ReadFileAs<wchar_t>(path, "", ec)) {
+		m_code->SetText(r->str);
+		m_text_codepage_source->SetValue(r->codepage);
+	}
 }
 
 void xMainWnd::OpenFileWith(std::wstring const& cmd) {
@@ -419,15 +386,15 @@ void xMainWnd::OpenFileWith(std::wstring const& cmd) {
 }
 
 void xMainWnd::OnButtonClick_OpenWith1(wxCommandEvent& event) {
-	OpenFileWith(L"notepad++.exe");
+	OpenFileWith(L"notepad++.exe");	// Nodepad++
 }
 
 void xMainWnd::OnButtonClick_OpenWith2(wxCommandEvent& event) {
-	OpenFileWith(L"code");
+	OpenFileWith(L"code");	// VSCode
 }
 
 void xMainWnd::OnButtonClick_OpenWith3(wxCommandEvent& event) {
-	OpenFileWith(L"");
+	OpenFileWith(L"");	// shell
 }
 
 void xMainWnd::OnCombobox_EncodingSource(wxCommandEvent& event) {
@@ -442,8 +409,10 @@ void xMainWnd::OnCombobox_EncodingSource(wxCommandEvent& event) {
 		return;
 
 	std::error_code ec;
-	if (auto str = ReadFileAs<wchar_t>(path, strCodepage, ec))
-		m_code->SetText(*str);
+	if (auto r = m_codepage_detector.ReadFileAs<wchar_t>(path, strCodepage, ec)) {
+		m_code->SetText(r->str);
+		m_text_codepage_source->SetValue(r->codepage);
+	}
 }
 
 void xMainWnd::OnButtonClick_ConvertSelectedFile(wxCommandEvent& event) {
@@ -463,18 +432,6 @@ void xMainWnd::OnButtonClick_ConvertSelectedFile(wxCommandEvent& event) {
 
 //=================================================================================================================================
 //
-
-
-template <typename TCHAR>
-int TFindOneOf(const TCHAR* pszSource, const TCHAR* pszDelimiters) {
-	for (const TCHAR* psz = pszSource; psz && *psz; psz++) {
-		for (const TCHAR* pszDelimiter = pszDelimiters; *pszDelimiter; pszDelimiter++) {
-			if (*pszDelimiter == *psz)
-				return (int)(psz - pszSource);
-		}
-	}
-	return -1;
-}
 
 template <typename TCHAR, bool bCaseSensitive = false>
 bool TFilterString(std::basic_string_view<TCHAR> svSRC, std::basic_string_view<TCHAR> svFilter, std::vector<std::basic_string<TCHAR>>& strParams) {

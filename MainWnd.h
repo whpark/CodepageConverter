@@ -46,64 +46,6 @@ protected:
 	void SaveCurrentFolderPath(std::filesystem::path const& strFolder);
 	std::filesystem::path GetSelectedFilePath(wxTreeListItem item = {});
 
-	template <typename tchar>
-	std::optional<std::basic_string<tchar>> ReadFileAs(std::filesystem::path const& path, std::string codepage, std::error_code& ec) {
-		ec.clear();
-		auto size = std::filesystem::file_size(path, ec);
-		if (ec) {
-			return {};
-		}
-		std::basic_string<tchar> str;
-
-		gtl::xIFArchive ar(path);
-		auto bom = ar.ReadCodepageBOM(gtl::eCODEPAGE::DEFAULT);
-		switch (bom) {
-		case gtl::eCODEPAGE::UTF8:
-		case gtl::eCODEPAGE::UTF16LE:
-		case gtl::eCODEPAGE::UTF16BE:
-		case gtl::eCODEPAGE::UTF32LE:
-		case gtl::eCODEPAGE::UTF32BE:
-			m_text_codepage_source->SetValue(std::format("{} BOM", GetCodepageName(bom)));
-			str.reserve(size/sizeof(tchar)+1);
-			while (auto r = ar.ReadLine<tchar>('\n', false)) {
-				str += *r;
-				str += '\n';
-			}
-			return str;
-
-		default:
-			{
-				std::string s;
-				s.resize(size);
-				ar.Read<char>(s.data(), s.size());
-				if (codepage.empty()) {
-					codepage = m_codepage_detector.DetectCodepage(std::string_view(s));
-					m_text_codepage_source->SetValue(codepage);
-				}
-				// using ICU, convert string to wstring
-				gtl::Ticonv<tchar, char> conv(nullptr, codepage.c_str());
-				if (auto r = conv.Convert(s)) {
-					str = std::move(*r);
-					if (codepage.contains("JIS")) {
-						using string_t = std::basic_string<tchar>;
-						static std::pair<string_t, string_t> const pairs[]{
-							{gtl::ToUTFString<tchar>(u8"‾"sv), gtl::ToUTFString<tchar>(u8"~"sv)},
-							{gtl::ToUTFString<tchar>(u8"¥"sv), gtl::ToUTFString<tchar>(u8"\\"sv)},
-						};
-						for (auto& p : pairs) {
-							for (auto pos = str.find(p.first); pos != str.npos; pos = str.find(p.first, pos + p.second.size())) {
-								str.replace(pos, p.first.size(), p.second);
-							}
-						}
-					}
-					return str;
-				}
-			}
-			break;
-		}
-		return {};
-	}
-
 	bool ConvertFileEncoding(std::filesystem::path const& path, std::string const& codepage_source, int codepage_target, bool bWriteBOM, bool bBackup, bool bPreserveTimestamps);
 
 public:
