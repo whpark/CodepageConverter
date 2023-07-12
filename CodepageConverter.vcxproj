@@ -156,6 +156,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\;$(PathGTL)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /dy $(PathGTL)\bin\gtl.x$(PlatformArchitecture)$(Configuration[0]).dll $(TargetDir)
+xcopy /dy $(PathGTL)\bin\gtl.wx.x$(PlatformArchitecture)$(Configuration[0]).dll $(TargetDir)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -183,6 +187,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\;$(PathGTL)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /dy $(PathGTL)\bin\gtl.x$(PlatformArchitecture)$(Configuration[0]).dll $(TargetDir)
+xcopy /dy $(PathGTL)\bin\gtl.wx.x$(PlatformArchitecture)$(Configuration[0]).dll $(TargetDir)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Codepage.h" />
