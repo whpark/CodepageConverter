@@ -89,7 +89,7 @@ namespace ui
 
 		public:
 
-			IMainWnd( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Desktop"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 1330,689 ), long style = wxDEFAULT_FRAME_STYLE|wxMAXIMIZE_BOX|wxMINIMIZE_BOX|wxTAB_TRAVERSAL );
+			IMainWnd( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Codepage Converter"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 1330,689 ), long style = wxDEFAULT_FRAME_STYLE|wxMAXIMIZE_BOX|wxMINIMIZE_BOX|wxTAB_TRAVERSAL );
 
 			~IMainWnd();
 
